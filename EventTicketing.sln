@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventTicketing", "EventTicketing\EventTicketing.csproj", "{CACF5BA2-45C0-421D-9B42-BED273FEEC26}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CACF5BA2-45C0-421D-9B42-BED273FEEC26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CACF5BA2-45C0-421D-9B42-BED273FEEC26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CACF5BA2-45C0-421D-9B42-BED273FEEC26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CACF5BA2-45C0-421D-9B42-BED273FEEC26}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
