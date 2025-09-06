@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using EventTicketing.Data;
 using EventTicketing.Entities;
+using EventTicketing.Models;
 using EventTicketing.Services;
 using EventTicketing.Services;
 
@@ -20,15 +21,6 @@ namespace EventTicketing.Controllers
         public AuthController(AppDbContext db, IPasswordHasher<User> hasher, ITokenService tokens)
         {
             _db = db; _hasher = hasher; _tokens = tokens;
-        }
-
-        public class RegisterDto
-        {
-            public string Email { get; set; } = default!;
-            public string Password { get; set; } = default!;
-            public string FirstName { get; set; } = default!;
-            public string LastName { get; set; } = default!;
-            public string? Role { get; set; } 
         }
 
         [HttpPost("register")]
@@ -61,12 +53,6 @@ namespace EventTicketing.Controllers
                                            .ToListAsync(ct);
             var pair = await _tokens.CreateAsync(user, roles, ct);
             return Ok(pair);
-        }
-
-        public class LoginDto
-        {
-            public string Email { get; set; } = default!;
-            public string Password { get; set; } = default!;
         }
 
         [HttpPost("login")]
