@@ -5,9 +5,9 @@ using Microsoft.AspNetCore.Identity;
 using EventTicketing.Data;
 using EventTicketing.Entities;
 using EventTicketing.Services;
-using JWTAuth.Services;
+using EventTicketing.Services;
 
-namespace JWTAuth.Controllers
+namespace EventTicketing.Controllers
 {
     [ApiController]
     [Route("auth")]

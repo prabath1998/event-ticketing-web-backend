@@ -7,7 +7,7 @@ using EventTicketing.Entities;
 using EventTicketing.Data;
 using EventTicketing.Services;
 
-namespace JWTAuth.Services
+namespace EventTicketing.Services
 {
     public class TokenService : ITokenService
     {
