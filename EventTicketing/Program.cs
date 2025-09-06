@@ -26,10 +26,8 @@ builder.Services.AddScoped<Microsoft.AspNetCore.Identity.IPasswordHasher<EventTi
 builder.Services.AddScoped<Microsoft.AspNetCore.Identity.IPasswordHasher<EventTicketing.Entities.User>,
     Microsoft.AspNetCore.Identity.PasswordHasher<EventTicketing.Entities.User>>();
 
-// Token service
 builder.Services.AddScoped<ITokenService, TokenService>();
 
-// AuthN (JWT)
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!));
 
@@ -55,19 +53,14 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
-// AuthZ (roles + custom policies)
 builder.Services.AddAuthorization(options =>
 {
-    // Example custom policy for organizer ownership checks
     options.AddPolicy("IsEventOwner", policy =>
         policy.Requirements.Add(new EventTicketing.Services.EventOwnerRequirement()));
 });
 
-// ✅ correct lifetimes
 builder.Services.AddScoped<IAuthorizationHandler, JWTAuth.Services.EventOwnerHandler>();
-builder.Services.AddHttpContextAccessor(); // if not already present
-
-
+builder.Services.AddHttpContextAccessor(); 
 
 var app = builder.Build();
 
