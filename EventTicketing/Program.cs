@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using EventTicketing.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -49,9 +50,11 @@ builder.Services.AddAuthentication(options =>
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = key,
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromMinutes(1)
+            ClockSkew = TimeSpan.FromMinutes(1),
         };
     });
+
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 builder.Services.AddAuthorization(options =>
 {
@@ -62,7 +65,12 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddScoped<IAuthorizationHandler, JWTAuth.Services.EventOwnerHandler>();
 builder.Services.AddHttpContextAccessor(); 
 
+builder.Services.AddResponseCaching();
+
 var app = builder.Build();
+
+// add middleware BEFORE endpoints
+app.UseResponseCaching();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

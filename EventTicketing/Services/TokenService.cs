@@ -25,18 +25,20 @@ namespace EventTicketing.Services
             var jwt = _config.GetSection("Jwt");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
+            
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),        // "sub"
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),          // NameIdentifier
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
                 new Claim("given_name", user.FirstName),
-                new Claim("family_name", user.LastName)
+                new Claim("family_name", user.LastName),
+                // plus one ClaimTypes.Role per role...
             };
            
             claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
-
+            
             var expires = DateTime.UtcNow.AddMinutes(int.Parse(jwt["AccessTokenMinutes"]!));
 
             var token = new JwtSecurityToken(
