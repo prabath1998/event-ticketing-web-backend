@@ -23,8 +23,7 @@ public class OrganizerTicketTypesController : ControllerBase
             .Where(o => o.UserId == CurrentUserId)
             .Select(o => (long?)o.Id)
             .FirstOrDefaultAsync(ct);
-
-    // Create ticket type for MY event
+   
     [HttpPost("events/{eventId:long}/ticket-types")]
     public async Task<IActionResult> CreateTicketType(long eventId, CreateTicketTypeDto dto, CancellationToken ct)
     {
@@ -55,8 +54,7 @@ public class OrganizerTicketTypesController : ControllerBase
         await _db.SaveChangesAsync(ct);
         return Created($"/organizer/ticket-types/{tt.Id}", new { tt.Id });
     }
-
-    // Update MY ticket type (ownership via event)
+    
     [HttpPut("ticket-types/{ticketTypeId:long}")]
     public async Task<IActionResult> UpdateTicketType(long ticketTypeId, UpdateTicketTypeDto dto, CancellationToken ct)
     {
