@@ -12,17 +12,7 @@ public class PublicEventsController : ControllerBase
 {
     private readonly AppDbContext _db;
     public PublicEventsController(AppDbContext db) => _db = db;
-    
-    /// List/search published events.
-    /// </summary>
-    /// <param name="q">Search in title/description</param>
-    /// <param name="categoryId">Filter by category</param>
-    /// <param name="city">Filter by city (exact match)</param>
-    /// <param name="from">Start datetime (UTC) inclusive</param>
-    /// <param name="to">End datetime (UTC) exclusive</param>
-    /// <param name="includePast">Include past events (default false)</param>
-    /// <param name="page">1-based page index</param>
-    /// <param name="pageSize">items per page</param>
+   
     [HttpGet]
     [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "q","categoryId","city","from","to","includePast","page","pageSize" })]
     public async Task<IActionResult> List(
@@ -91,11 +81,7 @@ public class PublicEventsController : ControllerBase
             items
         });
     }
-
-    /// <summary>
-    /// Get a single event’s public details.
-    /// Only Published events are visible publicly.
-    /// </summary>
+   
     [HttpGet("{id:long}")]
     [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "id" })]
     public async Task<IActionResult> Get(long id, CancellationToken ct)
@@ -119,11 +105,7 @@ public class PublicEventsController : ControllerBase
 
         return e is null ? NotFound() : Ok(e);
     }
-
   
-    /// Ticket types visible to the public.
-    /// By default returns ticket types whose sales window includes now.
-    /// Set includeAll=true to return all types for the event.
     [HttpGet("{id:long}/ticket-types")]
     [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "id","includeAll" })]
     public async Task<IActionResult> TicketTypes(long id, [FromQuery] bool includeAll = false, CancellationToken ct = default)
