@@ -113,7 +113,7 @@ public class PublicEventsController : ControllerBase
         var now = DateTime.UtcNow;
 
         var ev = await _db.Events.AsNoTracking()
-            .FirstOrDefaultAsync(e => e.Id == id && e.Status == EventStatus.Canceled, ct);
+            .FirstOrDefaultAsync(e => e.Id == id && e.Status == EventStatus.Published, ct);
         if (ev is null) return NotFound();
 
         var tts = _db.TicketTypes.AsNoTracking().Where(t => t.EventId == id);

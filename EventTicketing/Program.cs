@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using EventTicketing.Services;
+using EventTicketing.Services.Orders;
+using EventTicketing.Services.Payments;
+using EventTicketing.Services.Pricing;
+using EventTicketing.Services.Tickets;
 using JWTAuth.Services;
 using Microsoft.AspNetCore.Authorization;
 
@@ -28,6 +32,13 @@ builder.Services.AddScoped<Microsoft.AspNetCore.Identity.IPasswordHasher<EventTi
     Microsoft.AspNetCore.Identity.PasswordHasher<EventTicketing.Entities.User>>();
 
 builder.Services.AddScoped<ITokenService, TokenService>();
+
+builder.Services.AddScoped<IPricingService, PricingService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ITicketService, TicketService>();
+
+// Pick one gateway implementation to start
+builder.Services.AddScoped<IPaymentGateway, FakeGateway>();
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!));

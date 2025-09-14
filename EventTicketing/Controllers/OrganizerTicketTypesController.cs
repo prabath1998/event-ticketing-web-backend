@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EventTicketing.Data;
-using EventTicketing.Models;
+using EventTicketing.DTOs;
 using EventTicketing.Entities;
+using EventTicketing.Models;
 
 namespace EventTicketing.Controllers;
 
@@ -15,27 +16,34 @@ public class OrganizerTicketTypesController : ControllerBase
 {
     private readonly AppDbContext _db;
     public OrganizerTicketTypesController(AppDbContext db) => _db = db;
+  
+    private bool TryGetUserId(out long userId)
+    {
+        var raw = User.FindFirstValue("sub") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return long.TryParse(raw, out userId);
+    }
 
-    private long CurrentUserId => long.Parse(User.FindFirstValue("sub")!);
-
-    private async Task<long?> GetMyOrganizerIdAsync(CancellationToken ct)
-        => await _db.OrganizerProfiles
-            .Where(o => o.UserId == CurrentUserId)
-            .Select(o => (long?)o.Id)
-            .FirstOrDefaultAsync(ct);
+    private Task<long?> GetMyOrganizerIdAsync(long userId, CancellationToken ct) =>
+        _db.OrganizerProfiles
+           .Where(o => o.UserId == userId)
+           .Select(o => (long?)o.Id)
+           .FirstOrDefaultAsync(ct);
    
     [HttpPost("events/{eventId:long}/ticket-types")]
-    public async Task<IActionResult> CreateTicketType(long eventId, CreateTicketTypeDto dto, CancellationToken ct)
+    public async Task<IActionResult> CreateTicketType(long eventId, [FromBody] CreateTicketTypeDto dto, CancellationToken ct)
     {
-        var organizerId = await GetMyOrganizerIdAsync(ct);
-        if (organizerId is null) return Forbid();
+        if (!TryGetUserId(out var userId)) return Unauthorized();
 
+        var organizerId = await GetMyOrganizerIdAsync(userId, ct);
+        if (organizerId is null) return Forbid();
+       
         var ev = await _db.Events.AsNoTracking().FirstOrDefaultAsync(e => e.Id == eventId, ct);
         if (ev is null) return NotFound("Event not found.");
         if (ev.OrganizerId != organizerId.Value) return Forbid();
 
         if (dto.SalesStart >= dto.SalesEnd) return BadRequest("SalesStart must be before SalesEnd.");
         if (dto.TotalQuantity <= 0) return BadRequest("TotalQuantity must be > 0.");
+        if (dto.PerOrderLimit.HasValue && dto.PerOrderLimit <= 0) return BadRequest("PerOrderLimit must be > 0.");
 
         var tt = new TicketType
         {
@@ -54,14 +62,17 @@ public class OrganizerTicketTypesController : ControllerBase
         await _db.SaveChangesAsync(ct);
         return Created($"/organizer/ticket-types/{tt.Id}", new { tt.Id });
     }
-    
+   
     [HttpPut("ticket-types/{ticketTypeId:long}")]
-    public async Task<IActionResult> UpdateTicketType(long ticketTypeId, UpdateTicketTypeDto dto, CancellationToken ct)
+    public async Task<IActionResult> UpdateTicketType(long ticketTypeId, [FromBody] UpdateTicketTypeDto dto, CancellationToken ct)
     {
-        var organizerId = await GetMyOrganizerIdAsync(ct);
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+
+        var organizerId = await GetMyOrganizerIdAsync(userId, ct);
         if (organizerId is null) return Forbid();
 
-        var tt = await _db.TicketTypes.Include(t => t.Event).FirstOrDefaultAsync(t => t.Id == ticketTypeId, ct);
+        var tt = await _db.TicketTypes.Include(t => t.Event)
+                                      .FirstOrDefaultAsync(t => t.Id == ticketTypeId, ct);
         if (tt is null) return NotFound("Ticket type not found.");
         if (tt.Event.OrganizerId != organizerId.Value) return Forbid();
 

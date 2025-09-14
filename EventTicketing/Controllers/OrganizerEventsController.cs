@@ -16,12 +16,10 @@ public class OrganizerEventsController : ControllerBase
 {
     private readonly AppDbContext _db;
     public OrganizerEventsController(AppDbContext db) => _db = db;
-
-    // ---------- Helpers ----------
+    
     private bool TryGetUserId(out long userId)
     {
         userId = 0;
-        // prefer "sub", fall back to NameIdentifier
         var raw = User.FindFirstValue("sub") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
         return long.TryParse(raw, out userId);
     }
@@ -31,8 +29,7 @@ public class OrganizerEventsController : ControllerBase
            .Where(o => o.UserId == userId)
            .Select(o => (long?)o.Id)
            .FirstOrDefaultAsync(ct);
-
-    // ---------- Endpoints ----------
+  
 
     [HttpGet]
     public async Task<IActionResult> ListMine([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
@@ -136,8 +133,7 @@ public class OrganizerEventsController : ControllerBase
             .FirstOrDefaultAsync(e => e.Id == id, ct);
 
         if (ev is null) return NotFound();
-
-        // Update fields
+      
         ev.Title = dto.Title;
         ev.Description = dto.Description;
         ev.VenueName = dto.VenueName;
@@ -145,8 +141,7 @@ public class OrganizerEventsController : ControllerBase
         ev.LocationAddress = dto.LocationAddress;
         ev.StartTime = dto.StartTime;
         ev.EndTime = dto.EndTime;
-
-        // Replace categories
+       
         _db.EventCategories.RemoveRange(ev.EventCategories);
         if (dto.CategoryIds is { Length: > 0 })
         {
