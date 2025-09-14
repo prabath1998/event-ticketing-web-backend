@@ -15,13 +15,18 @@ namespace EventTicketing.Controllers;
 public class OrganizerEventsController : ControllerBase
 {
     private readonly AppDbContext _db;
-    public OrganizerEventsController(AppDbContext db) => _db = db;
+    private readonly ILogger<OrganizerEventsController> _logger;
+
+    public OrganizerEventsController(AppDbContext db, ILogger<OrganizerEventsController> logger)
+    {
+        _db = db;
+        _logger = logger;
+    }
 
     // ---------- Helpers ----------
     private bool TryGetUserId(out long userId)
     {
         userId = 0;
-        // prefer "sub", fall back to NameIdentifier
         var raw = User.FindFirstValue("sub") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
         return long.TryParse(raw, out userId);
     }
@@ -31,6 +36,35 @@ public class OrganizerEventsController : ControllerBase
            .Where(o => o.UserId == userId)
            .Select(o => (long?)o.Id)
            .FirstOrDefaultAsync(ct);
+
+    private async Task ProcessImageUpload(IFormFile? imageFile, Event eventEntity)
+    {
+        if (imageFile == null || imageFile.Length == 0)
+        {
+            // Clear existing image if no new image provided
+            eventEntity.ImageData = null;
+            eventEntity.ImageContentType = null;
+            eventEntity.ImageFileName = null;
+            eventEntity.ImageFileSize = null;
+            return;
+        }
+
+        // Validate image file
+        if (imageFile.Length > 5 * 1024 * 1024) // 5MB limit
+            throw new ArgumentException("Image file size must be less than 5MB");
+
+        var allowedContentTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+        if (!allowedContentTypes.Contains(imageFile.ContentType))
+            throw new ArgumentException("Invalid image format. Allowed: JPEG, PNG, GIF, WEBP");
+
+        using var memoryStream = new MemoryStream();
+        await imageFile.CopyToAsync(memoryStream);
+
+        eventEntity.ImageData = memoryStream.ToArray();
+        eventEntity.ImageContentType = imageFile.ContentType;
+        eventEntity.ImageFileName = imageFile.FileName;
+        eventEntity.ImageFileSize = imageFile.Length;
+    }
 
     // ---------- Endpoints ----------
 
@@ -50,8 +84,15 @@ public class OrganizerEventsController : ControllerBase
         var total = await q.CountAsync(ct);
         var items = await q.Skip((page - 1) * pageSize).Take(pageSize)
             .Select(e => new {
-                e.Id, e.Title, e.Status, e.StartTime, e.EndTime,
-                e.VenueName, e.LocationCity, e.CreatedAt
+                e.Id,
+                e.Title,
+                e.Status,
+                e.StartTime,
+                e.EndTime,
+                e.VenueName,
+                e.LocationCity,
+                e.CreatedAt,
+                ImageUrl = e.ImageData != null ? $"/api/events/{e.Id}/image" : null
             })
             .ToListAsync(ct);
 
@@ -59,7 +100,7 @@ public class OrganizerEventsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateEventDto dto, CancellationToken ct)
+    public async Task<IActionResult> Create([FromForm] CreateEventDto dto, CancellationToken ct)
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
         if (dto.StartTime >= dto.EndTime) return BadRequest("StartTime must be before EndTime.");
@@ -70,7 +111,7 @@ public class OrganizerEventsController : ControllerBase
             var profile = new OrganizerProfile
             {
                 UserId = userId,
-                CompanyName = "Organizer " + userId    
+                CompanyName = "Organizer " + userId
             };
             _db.OrganizerProfiles.Add(profile);
             await _db.SaveChangesAsync(ct);
@@ -89,6 +130,15 @@ public class OrganizerEventsController : ControllerBase
             EndTime = dto.EndTime,
             Status = EventStatus.Draft
         };
+
+        try
+        {
+            await ProcessImageUpload(dto.ImageFile, ev);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
 
         _db.Events.Add(ev);
         await _db.SaveChangesAsync(ct);
@@ -116,8 +166,16 @@ public class OrganizerEventsController : ControllerBase
         var ev = await _db.Events.AsNoTracking()
             .Where(e => e.Id == id)
             .Select(e => new {
-                e.Id, e.Title, e.Description, e.Status, e.StartTime, e.EndTime,
-                e.VenueName, e.LocationCity, e.LocationAddress,
+                e.Id,
+                e.Title,
+                e.Description,
+                e.Status,
+                e.StartTime,
+                e.EndTime,
+                e.VenueName,
+                e.LocationCity,
+                e.LocationAddress,
+                ImageUrl = e.ImageData != null ? $"/api/events/{e.Id}/image" : null,
                 Categories = e.EventCategories.Select(ec => ec.CategoryId).ToArray()
             })
             .FirstOrDefaultAsync(ct);
@@ -127,7 +185,7 @@ public class OrganizerEventsController : ControllerBase
 
     [HttpPut("{id:long}")]
     [Authorize(Policy = "IsEventOwner")]
-    public async Task<IActionResult> Update(long id, UpdateEventDto dto, CancellationToken ct)
+    public async Task<IActionResult> Update(long id, [FromForm] UpdateEventDto dto, CancellationToken ct)
     {
         if (dto.StartTime >= dto.EndTime) return BadRequest("StartTime must be before EndTime.");
 
@@ -146,6 +204,15 @@ public class OrganizerEventsController : ControllerBase
         ev.StartTime = dto.StartTime;
         ev.EndTime = dto.EndTime;
 
+        try
+        {
+            await ProcessImageUpload(dto.ImageFile, ev);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+
         // Replace categories
         _db.EventCategories.RemoveRange(ev.EventCategories);
         if (dto.CategoryIds is { Length: > 0 })
@@ -163,6 +230,23 @@ public class OrganizerEventsController : ControllerBase
         return NoContent();
     }
 
+    [HttpDelete("{id:long}/image")]
+    [Authorize(Policy = "IsEventOwner")]
+    public async Task<IActionResult> DeleteImage(long id, CancellationToken ct)
+    {
+        var ev = await _db.Events.FirstOrDefaultAsync(e => e.Id == id, ct);
+        if (ev is null) return NotFound();
+
+        ev.ImageData = null;
+        ev.ImageContentType = null;
+        ev.ImageFileName = null;
+        ev.ImageFileSize = null;
+
+        await _db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
+    // Keep your existing Publish and Cancel methods...
     [HttpPatch("{id:long}/publish")]
     [Authorize(Policy = "IsEventOwner")]
     public async Task<IActionResult> Publish(long id, CancellationToken ct)

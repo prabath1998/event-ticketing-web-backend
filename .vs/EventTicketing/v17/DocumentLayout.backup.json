@@ -1,0 +1,249 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Migrations\\20250913061723_AddedNewChanges.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:EventTicketing\\Migrations\\20250913061723_AddedNewChanges.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|d:\\project zoon\\esoft\\online event ticketing web app\\event-ticketing-web-backend\\eventticketing\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|solutionrelative:eventticketing\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Migrations\\20250913055621_AddedNewChanges.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:EventTicketing\\Migrations\\20250913055621_AddedNewChanges.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|d:\\project zoon\\esoft\\online event ticketing web app\\event-ticketing-web-backend\\eventticketing\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|solutionrelative:eventticketing\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|d:\\project zoon\\esoft\\online event ticketing web app\\event-ticketing-web-backend\\eventticketing\\models\\organizereventsdtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|solutionrelative:eventticketing\\models\\organizereventsdtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|d:\\project zoon\\esoft\\online event ticketing web app\\event-ticketing-web-backend\\eventticketing\\models\\publiceventsdtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|solutionrelative:eventticketing\\models\\publiceventsdtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|d:\\project zoon\\esoft\\online event ticketing web app\\event-ticketing-web-backend\\eventticketing\\controllers\\publiceventscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|solutionrelative:eventticketing\\controllers\\publiceventscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|d:\\project zoon\\esoft\\online event ticketing web app\\event-ticketing-web-backend\\eventticketing\\controllers\\eventimagescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|solutionrelative:eventticketing\\controllers\\eventimagescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|d:\\project zoon\\esoft\\online event ticketing web app\\event-ticketing-web-backend\\eventticketing\\controllers\\organizereventscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|solutionrelative:eventticketing\\controllers\\organizereventscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|d:\\project zoon\\esoft\\online event ticketing web app\\event-ticketing-web-backend\\eventticketing\\entities\\event.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|solutionrelative:eventticketing\\entities\\event.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|d:\\project zoon\\esoft\\online event ticketing web app\\event-ticketing-web-backend\\eventticketing\\services\\iimageservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|solutionrelative:eventticketing\\services\\iimageservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|d:\\project zoon\\esoft\\online event ticketing web app\\event-ticketing-web-backend\\eventticketing\\controllers\\organizertickettypescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|solutionrelative:eventticketing\\controllers\\organizertickettypescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|d:\\project zoon\\esoft\\online event ticketing web app\\event-ticketing-web-backend\\eventticketing\\services\\eventownerhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CACF5BA2-45C0-421D-9B42-BED273FEEC26}|EventTicketing\\EventTicketing.csproj|solutionrelative:eventticketing\\services\\eventownerhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "20250913061723_AddedNewChanges.cs",
+              "DocumentMoniker": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Migrations\\20250913061723_AddedNewChanges.cs",
+              "RelativeDocumentMoniker": "EventTicketing\\Migrations\\20250913061723_AddedNewChanges.cs",
+              "ToolTip": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Migrations\\20250913061723_AddedNewChanges.cs",
+              "RelativeToolTip": "EventTicketing\\Migrations\\20250913061723_AddedNewChanges.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-13T06:17:23.852Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "20250913055621_AddedNewChanges.cs",
+              "DocumentMoniker": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Migrations\\20250913055621_AddedNewChanges.cs",
+              "RelativeDocumentMoniker": "EventTicketing\\Migrations\\20250913055621_AddedNewChanges.cs",
+              "ToolTip": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Migrations\\20250913055621_AddedNewChanges.cs",
+              "RelativeToolTip": "EventTicketing\\Migrations\\20250913055621_AddedNewChanges.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-13T05:56:22.116Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "AppDbContext.cs",
+              "DocumentMoniker": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Data\\AppDbContext.cs",
+              "RelativeDocumentMoniker": "EventTicketing\\Data\\AppDbContext.cs",
+              "ToolTip": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Data\\AppDbContext.cs",
+              "RelativeToolTip": "EventTicketing\\Data\\AppDbContext.cs",
+              "ViewState": "AgIAADQAAAAAAAAAAAAvwFEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-12T18:33:34.635Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "PublicEventsController.cs",
+              "DocumentMoniker": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Controllers\\PublicEventsController.cs",
+              "RelativeDocumentMoniker": "EventTicketing\\Controllers\\PublicEventsController.cs",
+              "ToolTip": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Controllers\\PublicEventsController.cs",
+              "RelativeToolTip": "EventTicketing\\Controllers\\PublicEventsController.cs",
+              "ViewState": "AgIAAF4AAAAAAAAAAAAAwH4AAAA3AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-10T20:23:59.458Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "PublicEventsDtos.cs",
+              "DocumentMoniker": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Models\\PublicEventsDtos.cs",
+              "RelativeDocumentMoniker": "EventTicketing\\Models\\PublicEventsDtos.cs",
+              "ToolTip": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Models\\PublicEventsDtos.cs",
+              "RelativeToolTip": "EventTicketing\\Models\\PublicEventsDtos.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACYAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-10T20:26:23.276Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "OrganizerEventsDtos.cs",
+              "DocumentMoniker": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Models\\OrganizerEventsDtos.cs",
+              "RelativeDocumentMoniker": "EventTicketing\\Models\\OrganizerEventsDtos.cs",
+              "ToolTip": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Models\\OrganizerEventsDtos.cs",
+              "RelativeToolTip": "EventTicketing\\Models\\OrganizerEventsDtos.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAC0AAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-10T17:47:48.578Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Program.cs",
+              "RelativeDocumentMoniker": "EventTicketing\\Program.cs",
+              "ToolTip": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Program.cs",
+              "RelativeToolTip": "EventTicketing\\Program.cs",
+              "ViewState": "AgIAAEkAAAAAAAAAAAAAAGMAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-10T19:24:04.566Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "OrganizerEventsController.cs",
+              "DocumentMoniker": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Controllers\\OrganizerEventsController.cs",
+              "RelativeDocumentMoniker": "EventTicketing\\Controllers\\OrganizerEventsController.cs",
+              "ToolTip": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Controllers\\OrganizerEventsController.cs",
+              "RelativeToolTip": "EventTicketing\\Controllers\\OrganizerEventsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMBAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-10T17:36:14.034Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "IImageService.cs",
+              "DocumentMoniker": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Services\\IImageService.cs",
+              "RelativeDocumentMoniker": "EventTicketing\\Services\\IImageService.cs",
+              "ToolTip": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Services\\IImageService.cs",
+              "RelativeToolTip": "EventTicketing\\Services\\IImageService.cs",
+              "ViewState": "AgIAAEIAAAAAAAAAAAAQwFYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-10T19:14:53.071Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "EventImagesController.cs",
+              "DocumentMoniker": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Controllers\\EventImagesController.cs",
+              "RelativeDocumentMoniker": "EventTicketing\\Controllers\\EventImagesController.cs",
+              "ToolTip": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Controllers\\EventImagesController.cs",
+              "RelativeToolTip": "EventTicketing\\Controllers\\EventImagesController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-12T19:45:48.212Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "OrganizerTicketTypesController.cs",
+              "DocumentMoniker": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Controllers\\OrganizerTicketTypesController.cs",
+              "RelativeDocumentMoniker": "EventTicketing\\Controllers\\OrganizerTicketTypesController.cs",
+              "ToolTip": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Controllers\\OrganizerTicketTypesController.cs",
+              "RelativeToolTip": "EventTicketing\\Controllers\\OrganizerTicketTypesController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-12T08:08:24.383Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Event.cs",
+              "DocumentMoniker": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Entities\\Event.cs",
+              "RelativeDocumentMoniker": "EventTicketing\\Entities\\Event.cs",
+              "ToolTip": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Entities\\Event.cs",
+              "RelativeToolTip": "EventTicketing\\Entities\\Event.cs",
+              "ViewState": "AgIAAA0AAAAAAAAAAAA5wCIAAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-10T17:47:28.962Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "EventOwnerHandler.cs",
+              "DocumentMoniker": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Services\\EventOwnerHandler.cs",
+              "RelativeDocumentMoniker": "EventTicketing\\Services\\EventOwnerHandler.cs",
+              "ToolTip": "D:\\project Zoon\\esoft\\Online Event Ticketing Web App\\event-ticketing-web-backend\\EventTicketing\\Services\\EventOwnerHandler.cs",
+              "RelativeToolTip": "EventTicketing\\Services\\EventOwnerHandler.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAxwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-10T20:26:07.613Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

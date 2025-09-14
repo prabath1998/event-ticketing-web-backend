@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using EventTicketing.Services;
 using JWTAuth.Services;
 using Microsoft.AspNetCore.Authorization;
+using EventTicketing.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,6 +57,20 @@ builder.Services.AddAuthentication(options =>
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowNextJS",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+});
+
+
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("IsEventOwner", policy =>
@@ -66,6 +81,7 @@ builder.Services.AddScoped<IAuthorizationHandler, JWTAuth.Services.EventOwnerHan
 builder.Services.AddHttpContextAccessor(); 
 
 builder.Services.AddResponseCaching();
+
 
 var app = builder.Build();
 
@@ -82,6 +98,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseCors("AllowNextJS");
 
 app.MapControllers();
 

@@ -28,7 +28,11 @@ namespace EventTicketing.Entities
         public EventStatus Status { get; set; } = EventStatus.Draft;
 
         [MaxLength(500)]
-        public string? HeroImageUrl { get; set; }
+        // Image properties
+        public byte[]? ImageData { get; set; }
+        public string? ImageContentType { get; set; }
+        public string? ImageFileName { get; set; }
+        public long? ImageFileSize { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

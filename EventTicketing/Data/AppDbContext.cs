@@ -75,6 +75,11 @@ namespace EventTicketing.Data
                 e.HasIndex(x => x.LocationCity);
                 e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
                 // no DB default for CreatedAt/UpdatedAt
+
+                e.Property(x => x.ImageData).HasColumnType("MEDIUMBLOB");
+                e.Property(x => x.ImageContentType).HasMaxLength(100);
+                e.Property(x => x.ImageFileName).HasMaxLength(255);
+
                 e.HasOne(x => x.Organizer).WithMany(o => o.Events)
                     .HasForeignKey(x => x.OrganizerId).OnDelete(DeleteBehavior.Restrict);
             });

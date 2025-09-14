@@ -8,7 +8,7 @@ public record EventListItemDto(
     DateTime StartTime,
     DateTime EndTime,
     string Status,
-    string? HeroImageUrl
+    string? ImageUrl  // Changed from HeroImageUrl to ImageUrl
 );
 
 public record EventDetailDto(
@@ -21,10 +21,11 @@ public record EventDetailDto(
     DateTime StartTime,
     DateTime EndTime,
     string Status,
-    string? HeroImageUrl,
+    string? ImageUrl,  // Changed from HeroImageUrl to ImageUrl
     int[] CategoryIds
 );
 
+// Keep your existing TicketTypePublicDto
 public record TicketTypePublicDto(
     long Id,
     string Name,

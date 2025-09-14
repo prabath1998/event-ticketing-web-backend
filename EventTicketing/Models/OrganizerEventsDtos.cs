@@ -8,7 +8,8 @@ public record CreateEventDto(
     string? LocationAddress,
     DateTime StartTime,
     DateTime EndTime,
-    int[] CategoryIds
+    int[] CategoryIds,
+    IFormFile? ImageFile  // Add image file support
 );
 
 public record UpdateEventDto(
@@ -19,9 +20,11 @@ public record UpdateEventDto(
     string? LocationAddress,
     DateTime StartTime,
     DateTime EndTime,
-    int[] CategoryIds
+    int[] CategoryIds,
+    IFormFile? ImageFile  // Add image file support
 );
 
+// Keep your existing ticket type DTOs
 public record CreateTicketTypeDto(
     string Name,
     int PriceCents,

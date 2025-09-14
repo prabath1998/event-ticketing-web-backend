@@ -12,9 +12,9 @@ public class PublicEventsController : ControllerBase
 {
     private readonly AppDbContext _db;
     public PublicEventsController(AppDbContext db) => _db = db;
-   
+
     [HttpGet]
-    [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "q","categoryId","city","from","to","includePast","page","pageSize" })]
+    [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "q", "categoryId", "city", "from", "to", "includePast", "page", "pageSize" })]
     public async Task<IActionResult> List(
         [FromQuery] string? q,
         [FromQuery] int? categoryId,
@@ -52,7 +52,7 @@ public class PublicEventsController : ControllerBase
             query = query.Where(e => e.LocationCity == city);
 
         if (from is not null) query = query.Where(e => e.StartTime >= from.Value);
-        if (to   is not null) query = query.Where(e => e.StartTime <  to.Value);
+        if (to is not null) query = query.Where(e => e.StartTime < to.Value);
 
         query = query.OrderBy(e => e.StartTime).ThenBy(e => e.Id);
 
@@ -69,7 +69,7 @@ public class PublicEventsController : ControllerBase
                 e.StartTime,
                 e.EndTime,
                 e.Status.ToString(),
-                e.HeroImageUrl
+                e.ImageData != null ? $"/api/events/{e.Id}/image" : null
             ))
             .ToListAsync(ct);
 
@@ -81,7 +81,7 @@ public class PublicEventsController : ControllerBase
             items
         });
     }
-   
+
     [HttpGet("{id:long}")]
     [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "id" })]
     public async Task<IActionResult> Get(long id, CancellationToken ct)
@@ -98,22 +98,22 @@ public class PublicEventsController : ControllerBase
                 ev.StartTime,
                 ev.EndTime,
                 ev.Status.ToString(),
-                ev.HeroImageUrl,
+                ev.ImageData != null ? $"/api/events/{ev.Id}/image" : null,
                 ev.EventCategories.Select(ec => ec.CategoryId).ToArray()
             ))
             .FirstOrDefaultAsync(ct);
 
         return e is null ? NotFound() : Ok(e);
     }
-  
+
     [HttpGet("{id:long}/ticket-types")]
-    [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "id","includeAll" })]
+    [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "id", "includeAll" })]
     public async Task<IActionResult> TicketTypes(long id, [FromQuery] bool includeAll = false, CancellationToken ct = default)
     {
         var now = DateTime.UtcNow;
 
         var ev = await _db.Events.AsNoTracking()
-            .FirstOrDefaultAsync(e => e.Id == id && e.Status == EventStatus.Canceled, ct);
+            .FirstOrDefaultAsync(e => e.Id == id && e.Status == EventStatus.Published, ct);
         if (ev is null) return NotFound();
 
         var tts = _db.TicketTypes.AsNoTracking().Where(t => t.EventId == id);
