@@ -8,7 +8,7 @@ public record EventListItemDto(
     DateTime StartTime,
     DateTime EndTime,
     string Status,
-    string? HeroImageUrl
+    string? ImageUrl  
 );
 
 public record EventDetailDto(
@@ -21,7 +21,7 @@ public record EventDetailDto(
     DateTime StartTime,
     DateTime EndTime,
     string Status,
-    string? HeroImageUrl,
+    string? ImageUrl,  
     int[] CategoryIds
 );
 
