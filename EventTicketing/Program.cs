@@ -47,6 +47,8 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPricingService, PricingService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<EventTicketing.Services.Audit.IAuditService, EventTicketing.Services.Audit.AuditService>();
+
 
 // Pick one gateway implementation to start
 builder.Services.AddScoped<IPaymentGateway, FakeGateway>();

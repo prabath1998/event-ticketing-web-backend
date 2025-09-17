@@ -1,8 +1,13 @@
-using EventTicketing.Entities;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace EventTicketing.Services.Tickets;
-
-public interface ITicketService
+namespace EventTicketing.Services.Tickets
 {
-    Task IssueForOrderAsync(long orderId, CancellationToken ct);
+    public interface ITicketService
+    {
+        /// <summary>
+        /// Issues tickets for a paid order. Idempotent: will not duplicate if tickets already exist.
+        /// </summary>
+        Task IssueForPaidOrderAsync(long orderId, CancellationToken ct = default);
+    }
 }

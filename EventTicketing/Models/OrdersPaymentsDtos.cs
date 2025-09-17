@@ -21,11 +21,16 @@ public record OrderSummaryDto(
     DateTime CreatedAt
 );
 
-public record PaymentInitResponseDto(
+/*public record PaymentInitResponseDto(
     string Provider,
     string? ClientSecret,
     string? RedirectUrl
-);
+);*/
+
+//public record PaymentInitResponseDto(string Provider, long OrderId, bool RequiresRedirect);
+// Models/OrdersPaymentsDtos.cs
+public record PaymentInitResponseDto(string Provider, long OrderId, bool RequiresRedirect);
+
 
 public record PaymentWebhookDto( 
     string Provider,

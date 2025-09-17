@@ -31,28 +31,24 @@ namespace EventTicketing.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // USERS
+            
             modelBuilder.Entity<User>(e =>
             {
                 e.HasIndex(x => x.Email).IsUnique();
                 e.Property(x => x.IsActive).HasDefaultValue(true);
-                // Remove DB defaults on DateTime to avoid MySQL error
                 // e.Property(x => x.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 // e.Property(x => x.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             });
-
-            // ROLES & USERROLES
+           
             modelBuilder.Entity<Role>(e => { e.HasIndex(x => x.Name).IsUnique(); });
             modelBuilder.Entity<UserRole>().HasKey(ur => new { ur.UserId, ur.RoleId });
             modelBuilder.Entity<UserRole>()
                 .HasOne(ur => ur.User).WithMany(u => u.UserRoles).HasForeignKey(ur => ur.UserId);
             modelBuilder.Entity<UserRole>()
                 .HasOne(ur => ur.Role).WithMany(r => r.UserRoles).HasForeignKey(ur => ur.RoleId);
-
-            // REFRESH TOKENS
+           
             modelBuilder.Entity<RefreshToken>(e => { e.HasIndex(x => new { x.UserId, x.ExpiresAt }); });
-
-            // PROFILES
+           
             modelBuilder.Entity<OrganizerProfile>()
                 .HasOne(op => op.User).WithOne(u => u.OrganizerProfile)
                 .HasForeignKey<OrganizerProfile>(op => op.UserId).IsRequired();
@@ -60,50 +56,41 @@ namespace EventTicketing.Data
             modelBuilder.Entity<CustomerProfile>()
                 .HasOne(cp => cp.User).WithOne(u => u.CustomerProfile)
                 .HasForeignKey<CustomerProfile>(cp => cp.UserId).IsRequired();
-
-            // CATEGORIES
+           
             modelBuilder.Entity<Category>(e =>
             {
                 e.HasIndex(x => x.Name).IsUnique();
                 e.HasIndex(x => x.Slug).IsUnique();
             });
-
-            // EVENTS
+           
             modelBuilder.Entity<Event>(e =>
             {
                 e.HasIndex(x => new { x.Status, x.StartTime });
                 e.HasIndex(x => x.LocationCity);
                 e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
-                // no DB default for CreatedAt/UpdatedAt
                 e.HasOne(x => x.Organizer).WithMany(o => o.Events)
                     .HasForeignKey(x => x.OrganizerId).OnDelete(DeleteBehavior.Restrict);
             });
-
-            // EVENT CATEGORIES
+            
             modelBuilder.Entity<EventCategory>().HasKey(ec => new { ec.EventId, ec.CategoryId });
-
-            // TICKET TYPES
+           
             modelBuilder.Entity<TicketType>(e =>
             {
                 e.HasIndex(x => x.EventId);
                 e.HasIndex(x => new { x.SalesStart, x.SalesEnd });
                 e.Property(x => x.Currency).HasMaxLength(3);
-                // no DB default for CreatedAt/UpdatedAt
             });
-
-            // ORDERS
+           
             modelBuilder.Entity<Order>(e =>
             {
                 e.HasIndex(x => x.OrderNumber).IsUnique();
                 e.HasIndex(x => new { x.UserId, x.Status, x.CreatedAt });
                 e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
                 e.Property(x => x.Currency).HasMaxLength(3);
-                // no DB default for CreatedAt/UpdatedAt
                 e.HasOne(x => x.User).WithMany(u => u.Orders)
                     .HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
             });
-
-            // ORDER ITEMS
+           
             modelBuilder.Entity<OrderItem>(e =>
             {
                 e.HasIndex(x => x.OrderId);
@@ -111,8 +98,7 @@ namespace EventTicketing.Data
                 e.HasOne(oi => oi.Event).WithMany().HasForeignKey(oi => oi.EventId).OnDelete(DeleteBehavior.Restrict);
                 e.HasOne(oi => oi.TicketType).WithMany(tt => tt.OrderItems).HasForeignKey(oi => oi.TicketTypeId).OnDelete(DeleteBehavior.Restrict);
             });
-
-            // PAYMENTS
+            
             modelBuilder.Entity<Payment>(e =>
             {
                 e.HasIndex(x => x.OrderId).IsUnique();
@@ -122,19 +108,16 @@ namespace EventTicketing.Data
                 e.HasOne(p => p.Order).WithOne(o => o.Payment)
                     .HasForeignKey<Payment>(p => p.OrderId).OnDelete(DeleteBehavior.Cascade);
             });
-
-            // TICKETS
+            
             modelBuilder.Entity<Ticket>(e =>
             {
                 e.HasIndex(x => x.TicketCode).IsUnique();
                 e.HasIndex(x => x.Status);
                 e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
-                // no DB default for IssuedAt
                 e.HasOne(t => t.OrderItem).WithMany(oi => oi.Tickets)
                     .HasForeignKey(t => t.OrderItemId).OnDelete(DeleteBehavior.Cascade);
             });
-
-            // DISCOUNTS
+            
             modelBuilder.Entity<Discount>(e =>
             {
                 e.HasIndex(x => x.Code).IsUnique();
@@ -144,8 +127,7 @@ namespace EventTicketing.Data
                 e.HasOne(d => d.TicketType).WithMany(tt => tt.Discounts)
                     .HasForeignKey(d => d.TicketTypeId).OnDelete(DeleteBehavior.Restrict);
             });
-
-            // LOYALTY
+            
             modelBuilder.Entity<LoyaltyLedger>(e =>
             {
                 e.HasIndex(x => new { x.UserId, x.CreatedAt });
@@ -154,25 +136,21 @@ namespace EventTicketing.Data
                 e.HasOne(l => l.Order).WithMany()
                     .HasForeignKey(l => l.OrderId).OnDelete(DeleteBehavior.SetNull);
             });
-
-            // AUDIT LOGS
+           
             modelBuilder.Entity<AdminAuditLog>(e =>
             {
                 e.HasIndex(x => new { x.EntityType, x.EntityId, x.CreatedAt });
-                // no DB default for CreatedAt
                 e.HasOne(a => a.Actor).WithMany(u => u.AuditLogs)
                     .HasForeignKey(a => a.ActorUserId).OnDelete(DeleteBehavior.Restrict);
             });
-
-            // Seed roles (optional)
+            
             modelBuilder.Entity<Role>().HasData(
                 new Role { Id = 1, Name = "Admin" },
                 new Role { Id = 2, Name = "Organizer" },
                 new Role { Id = 3, Name = "Customer" }
             );
         }
-
-        // ---- Automatic timestamps (UTC) ----
+        
         public override int SaveChanges()
         {
             StampTimestamps();
@@ -194,8 +172,8 @@ namespace EventTicketing.Data
                 {
                     SetIfExists(entry, "CreatedAt", now);
                     SetIfExists(entry, "UpdatedAt", now);
-                    SetIfExists(entry, "IssuedAt", now); // Ticket
-                    SetIfExists(entry, "CreatedOn", now); // if you add other names later
+                    SetIfExists(entry, "IssuedAt", now); 
+                    SetIfExists(entry, "CreatedOn", now); 
                 }
                 else if (entry.State == EntityState.Modified)
                 {

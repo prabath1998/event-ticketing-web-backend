@@ -28,13 +28,13 @@ namespace EventTicketing.Services
             
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),        // "sub"
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),          // NameIdentifier
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),        
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),          
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
                 new Claim("given_name", user.FirstName),
                 new Claim("family_name", user.LastName),
-                // plus one ClaimTypes.Role per role...
+                
             };
            
             claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));

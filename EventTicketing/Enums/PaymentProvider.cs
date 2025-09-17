@@ -1,6 +1,10 @@
 namespace EventTicketing.Enums
-
 {
-    public enum PaymentProvider { Stripe, Paypal, PayHere, WebXPay, Other }
-
+    public enum PaymentProvider
+    { 
+        Dummy = 0,
+        Other = 1,
+    // Stripe = 2,
+    
+    }
 }
