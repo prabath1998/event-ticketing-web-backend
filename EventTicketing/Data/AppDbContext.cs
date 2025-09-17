@@ -79,6 +79,8 @@ namespace EventTicketing.Data
                 e.HasIndex(x => x.EventId);
                 e.HasIndex(x => new { x.SalesStart, x.SalesEnd });
                 e.Property(x => x.Currency).HasMaxLength(3);
+                e.Property(x => x.SalesStart).HasPrecision(6); 
+                e.Property(x => x.SalesEnd).HasPrecision(6);  
             });
            
             modelBuilder.Entity<Order>(e =>
@@ -149,6 +151,15 @@ namespace EventTicketing.Data
                 new Role { Id = 2, Name = "Organizer" },
                 new Role { Id = 3, Name = "Customer" }
             );
+            
+            /*modelBuilder.Entity<TicketType>(b =>
+            {
+                b.Property(x => x.SalesStart)
+                    .HasColumnType("datetime(6)");
+
+                b.Property(x => x.SalesEnd)
+                    .HasColumnType("datetime(6)");
+            });*/
         }
         
         public override int SaveChanges()

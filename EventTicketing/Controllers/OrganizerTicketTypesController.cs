@@ -44,6 +44,15 @@ public class OrganizerTicketTypesController : ControllerBase
         if (dto.SalesStart >= dto.SalesEnd) return BadRequest("SalesStart must be before SalesEnd.");
         if (dto.TotalQuantity <= 0) return BadRequest("TotalQuantity must be > 0.");
         if (dto.PerOrderLimit.HasValue && dto.PerOrderLimit <= 0) return BadRequest("PerOrderLimit must be > 0.");
+        
+        var start = dto.SalesStart.Kind == DateTimeKind.Utc
+            ? dto.SalesStart
+            : DateTime.SpecifyKind(dto.SalesStart, DateTimeKind.Local).ToUniversalTime();
+
+        var end = dto.SalesEnd.Kind == DateTimeKind.Utc
+            ? dto.SalesEnd
+            : DateTime.SpecifyKind(dto.SalesEnd, DateTimeKind.Local).ToUniversalTime();
+      
 
         var tt = new TicketType
         {
@@ -53,8 +62,8 @@ public class OrganizerTicketTypesController : ControllerBase
             PriceCents = dto.PriceCents,
             Currency = dto.Currency,
             TotalQuantity = dto.TotalQuantity,
-            SalesStart = dto.SalesStart,
-            SalesEnd = dto.SalesEnd,
+            SalesStart = start,
+            SalesEnd = end,
             PerOrderLimit = dto.PerOrderLimit
         };
 
