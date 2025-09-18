@@ -10,6 +10,7 @@ using EventTicketing.Services.Payments;
 using EventTicketing.Services.Pricing;
 using EventTicketing.Services.Tickets;
 using JWTAuth.Services;
+using EventTicketing.Models.Options;
 using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,9 +50,12 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<EventTicketing.Services.Audit.IAuditService, EventTicketing.Services.Audit.AuditService>();
 
+builder.Services.Configure<StripeOptions>(builder.Configuration.GetSection("Stripe"));
+builder.Services.Configure<FrontendOptions>(builder.Configuration.GetSection("Frontend"));
+builder.Services.AddScoped<IPaymentGateway, StripeGateway>();
 
 // Pick one gateway implementation to start
-builder.Services.AddScoped<IPaymentGateway, FakeGateway>();
+//builder.Services.AddScoped<IPaymentGateway, FakeGateway>();
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!));

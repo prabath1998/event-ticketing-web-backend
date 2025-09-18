@@ -28,7 +28,7 @@ namespace EventTicketing.Services.Tickets
             if (order is null)
                 throw new InvalidOperationException($"Order {orderId} not found.");
 
-            if (order.Status != OrderStatus.Paid)
+            if (order.Status != OrderStatus.Pending)
                 throw new InvalidOperationException($"Order {orderId} not paid. Current status: {order.Status}");
 
             // Idempotency: if any ticket already exists for this order, do nothing

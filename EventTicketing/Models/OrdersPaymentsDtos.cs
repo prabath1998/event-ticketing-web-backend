@@ -29,11 +29,21 @@ public record OrderSummaryDto(
 
 //public record PaymentInitResponseDto(string Provider, long OrderId, bool RequiresRedirect);
 // Models/OrdersPaymentsDtos.cs
-public record PaymentInitResponseDto(string Provider, long OrderId, bool RequiresRedirect);
+//public record PaymentInitResponseDto(string Provider, long OrderId, bool RequiresRedirect);
 
 
 public record PaymentWebhookDto( 
     string Provider,
     string Payload,
     string? Signature
+);
+
+// Models/OrdersPaymentsDtos.cs (or similar)
+public record PaymentInitResponseDto(
+    string provider,
+    string? clientSecret,
+    string? redirectUrl,
+    string? sessionId,
+    bool requiresRedirect,
+    long orderId
 );

@@ -26,5 +26,7 @@ namespace EventTicketing.Entities
         public string? RawResponse { get; set; }
 
         public Order Order { get; set; } = default!;
+        public string? ProviderSessionId { get; set; }  // <— new
+
     }
 }

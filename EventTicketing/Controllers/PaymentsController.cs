@@ -8,6 +8,7 @@ using EventTicketing.Enums;
 using EventTicketing.Services.Payments;
 using EventTicketing.Services.Tickets;
 using System.Security.Claims;
+using EventTicketing.Services.Audit;
 
 namespace EventTicketing.Controllers;
 
@@ -19,11 +20,17 @@ public class PaymentsController : ControllerBase
     private readonly IPaymentGateway _gateway;
     private readonly ITicketService _tickets;
     private readonly IConfiguration _config;
+    private readonly IAuditService _audit;
 
 
-    public PaymentsController(AppDbContext db, IPaymentGateway gateway, ITicketService tickets,IConfiguration config)
+    public PaymentsController(AppDbContext db, IPaymentGateway gateway, ITicketService tickets, IConfiguration config,
+        IAuditService audit)
     {
-        _db = db; _gateway = gateway; _tickets = tickets; _config = config;
+        _db = db;
+        _gateway = gateway;
+        _tickets = tickets;
+        _config = config;
+        _audit = audit;
     }
 
     private bool TryGetUserId(out long userId)
@@ -32,94 +39,142 @@ public class PaymentsController : ControllerBase
         return long.TryParse(raw, out userId);
     }
 
-    // PaymentsController.cs
+
     [HttpPost("{orderId:long}/initiate")]
     [Authorize]
-    public async Task<IActionResult> Initiate(long orderId, CancellationToken ct)
+    public async Task<PaymentSessionResult> InitiatePaymentAsync(long orderId, CancellationToken ct)
     {
-        if (!TryGetUserId(out var userId)) return Unauthorized();
+        await using var tx = await _db.Database.BeginTransactionAsync(ct);
 
         var order = await _db.Orders
             .Include(o => o.Payment)
-            .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId, ct);
+            .FirstOrDefaultAsync(o => o.Id == orderId, ct);
 
-        if (order is null) return NotFound();
-        if (order.Status != OrderStatus.Pending) return BadRequest("Order is not pending.");
+        if (order is null)
+            throw new InvalidOperationException("Order not found");
 
-        if (order.Payment == null)
+        if (order.Status == OrderStatus.Paid)
         {
-            order.Payment = new Payment
+            await tx.CommitAsync(ct);
+            return new PaymentSessionResult(
+                Provider: "internal",
+                ClientSecret: null,
+                RedirectUrl: null,
+                SessionId: null,
+                RequiresRedirect: false
+            );
+        }
+
+        var amountCents = order.TotalCents;
+
+        var payment = order.Payment;
+        if (payment is null)
+        {
+            payment = new Payment
             {
                 OrderId = order.Id,
-                Provider = PaymentProvider.Dummy,
+                AmountCents = amountCents,
+                Currency = order.Currency,
                 Status = PaymentStatus.Initiated,
-                AmountCents = order.TotalCents,
-                Currency = order.Currency
+                Provider = PaymentProvider.Stripe,
+                PaidAt = null,
+                ProviderRef = null,
+                ProviderSessionId = null,
+                RawResponse = null
             };
-            _db.Payments.Add(order.Payment);
-            await _db.SaveChangesAsync(ct);
-        }
-       
-        var useDummy = _config.GetValue<bool>("Payments:UseDummy", true);
-        if (useDummy)
-        {
-            return Ok(new PaymentInitResponseDto(
-                Provider: "dummy",
-                OrderId: order.Id,
-                RequiresRedirect: false
-            ));
-        }
-        
-        var session = await _gateway.CreatePaymentSessionAsync(order.Id, ct);
-        return Ok(new PaymentInitResponseDto(
-            Provider: _gateway.Name,
-            OrderId: order.Id,
-            RequiresRedirect: true
-        ));
-    }
-  
-    [HttpPost("webhook/{provider}")]
-    [AllowAnonymous]
-    public async Task<IActionResult> Webhook(string provider, [FromBody] PaymentWebhookDto dto, CancellationToken ct)
-    {
-        if (!string.Equals(provider, _gateway.Name, StringComparison.OrdinalIgnoreCase))
-            return BadRequest("Unknown provider.");
 
-        var (orderId, success) = await _gateway.HandleWebhookAsync(dto.Payload, dto.Signature, ct);
-        if (orderId == 0) return BadRequest("Invalid payload.");
-
-        var order = await _db.Orders.Include(o => o.Payment).FirstOrDefaultAsync(o => o.Id == orderId, ct);
-        if (order == null) return NotFound();
-
-        if (success)
-        {
-            order.Status = OrderStatus.Paid;
-            if (order.Payment != null)
-            {
-                order.Payment.Status = PaymentStatus.Captured;
-                order.Payment.PaidAt = DateTime.UtcNow;
-                order.Payment.RawResponse = dto.Payload;
-            }
-            await _db.SaveChangesAsync(ct);
-          
+            _db.Payments.Add(payment);
             await _tickets.IssueForPaidOrderAsync(order.Id, ct);
+            await _db.SaveChangesAsync(ct);
         }
         else
         {
-            order.Status = OrderStatus.Failed;
-            if (order.Payment != null)
+            if (payment.Status == PaymentStatus.Captured || payment.Status == PaymentStatus.Succeeded)
             {
-                order.Payment.Status = PaymentStatus.Failed;
-                order.Payment.RawResponse = dto.Payload;
+                await tx.CommitAsync(ct);
+                return new PaymentSessionResult(
+                    Provider: "internal",
+                    ClientSecret: null,
+                    RedirectUrl: null,
+                    SessionId: null,
+                    RequiresRedirect: false
+                );
             }
+
+            payment.AmountCents = amountCents;
+            payment.Currency = order.Currency;
+            payment.Status = PaymentStatus.Initiated;
+            payment.PaidAt = null;
+            payment.Provider = PaymentProvider.Stripe;
+            payment.ProviderRef = null;
+            payment.ProviderSessionId = null;
+            payment.RawResponse = null;
+
+            _db.Payments.Update(payment);
             await _db.SaveChangesAsync(ct);
-           
         }
 
-        return Ok(new { order.Id, order.Status });
+
+        var session = await _gateway.CreatePaymentSessionAsync(order.Id, ct);
+
+
+        payment.ProviderSessionId = session.SessionId;
+        payment.ProviderRef = session.SessionId;
+        _db.Payments.Update(payment);
+        await _db.SaveChangesAsync(ct);
+
+        await tx.CommitAsync(ct);
+
+
+        return new PaymentSessionResult(
+            Provider: session.Provider,
+            ClientSecret: session.ClientSecret,
+            RedirectUrl: session.RedirectUrl,
+            SessionId: session.SessionId,
+            RequiresRedirect: session.RequiresRedirect
+        );
     }
-    
-     [HttpPost("{orderId:long}/dummy-confirm")]
+
+    [HttpPost("webhook/stripe")]
+    [AllowAnonymous]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> StripeWebhook(CancellationToken ct)
+    {
+        Request.EnableBuffering();
+
+        string json;
+        using (var reader = new StreamReader(Request.Body, leaveOpen: true))
+            json = await reader.ReadToEndAsync();
+        Request.Body.Position = 0;
+
+        var signature = Request.Headers["Stripe-Signature"].ToString();
+
+        var (orderId, ok) = await _gateway.HandleWebhookAsync(json, signature, ct);
+
+
+        if (ok && orderId == 0) return Ok();
+        if (!ok) return BadRequest();
+
+        var order = await _db.Orders
+            .Include(o => o.Payment)
+            .FirstOrDefaultAsync(o => o.Id == orderId, ct);
+
+        if (order == null) return NotFound();
+
+
+        try
+        {
+            await _tickets.IssueForPaidOrderAsync(order.Id, ct);
+        }
+        catch (Exception)
+        {
+        }
+
+        return Ok();
+    }
+
+
+    [HttpPost("{orderId:long}/dummy-confirm")]
     [Authorize]
     public async Task<IActionResult> DummyConfirm(long orderId, CancellationToken ct)
     {
@@ -133,27 +188,27 @@ public class PaymentsController : ControllerBase
             .FirstOrDefaultAsync(o => o.Id == orderId, ct);
 
         if (order is null) return NotFound("Order not found.");
-       
+
         if (!TryGetUserId(out var userId)) return Unauthorized();
         var isAdmin = User.IsInRole("Admin");
         if (!isAdmin && order.UserId != userId) return Forbid();
-       
+
         if (order.Status == OrderStatus.Paid)
         {
-            await _tickets.IssueForPaidOrderAsync(order.Id, ct); 
+            await _tickets.IssueForPaidOrderAsync(order.Id, ct);
             return Ok(new { order.Id, order.Status, message = "Order already paid; tickets ensured." });
         }
 
         if (order.Status != OrderStatus.Pending)
             return BadRequest($"Order is not pending. Current status: {order.Status}");
 
-        
+
         if (order.Payment == null)
         {
             order.Payment = new Payment
             {
                 OrderId = order.Id,
-                Provider = PaymentProvider.Dummy,   
+                Provider = PaymentProvider.Stripe,
                 Status = PaymentStatus.Captured,
                 AmountCents = order.TotalCents,
                 Currency = order.Currency,
@@ -167,13 +222,13 @@ public class PaymentsController : ControllerBase
             order.Payment.Status = PaymentStatus.Captured;
             order.Payment.PaidAt = DateTime.UtcNow;
             order.Payment.RawResponse = "{ \"dummy\": true }";
-            order.Payment.Provider = PaymentProvider.Dummy; 
+            order.Payment.Provider = PaymentProvider.Stripe;
         }
 
         order.Status = OrderStatus.Paid;
         order.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
-        
+
         await _tickets.IssueForPaidOrderAsync(order.Id, ct);
 
         return Ok(new { order.Id, order.Status });
