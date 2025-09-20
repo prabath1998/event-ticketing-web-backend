@@ -7,6 +7,7 @@ using EventTicketing.Services.Audit;
 using System.Security.Claims;
 using EventTicketing.Entities;
 using EventTicketing.Enums;
+using EventTicketing.Services.Email;
 
 namespace EventTicketing.Controllers;
 
@@ -17,11 +18,11 @@ public class AdminDiscountsController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IAuditService _audit;
+    private readonly IEmailQueue _emailQueue;  
 
-    public AdminDiscountsController(AppDbContext db, IAuditService audit)
+    public AdminDiscountsController(AppDbContext db, IAuditService audit, IEmailQueue emailQueue)
     {
-        _db = db;
-        _audit = audit;
+        _db = db; _audit = audit; _emailQueue = emailQueue;
     }
 
     private bool TryGetUserId(out long userId)
@@ -62,8 +63,7 @@ public class AdminDiscountsController : ControllerBase
     {
         page = Math.Max(page, 1);
         pageSize = Math.Clamp(pageSize, 1, 100);
-
-        // Base query: only this event's discounts
+        
         IQueryable<Discount> d = _db.Discounts
             .AsNoTracking()
             .Where(x => x.EventId == eventId);
@@ -113,7 +113,6 @@ public class AdminDiscountsController : ControllerBase
         await _audit.LogAsync(adminId, "DiscountToggled", "Discount", id, new { dto.IsActive }, ct);
         return Ok(new { disc.Id, disc.IsActive });
     }
-
     
 
     public record CreateDiscountDto(
@@ -132,10 +131,7 @@ public class AdminDiscountsController : ControllerBase
     public async Task<IActionResult> Create(long eventId, [FromBody] CreateDiscountDto dto, CancellationToken ct)
     {
         var code = dto.Code.Trim().ToUpperInvariant();
-
-        // verify event exists (optional but recommended)
-        if (!await _db.Events.AnyAsync(e => e.Id == eventId, ct))
-            return NotFound("Event not found.");
+        if (!await _db.Events.AnyAsync(e => e.Id == eventId, ct)) return NotFound("Event not found.");
 
         var exists = await _db.Discounts.AnyAsync(d => d.EventId == eventId && d.Code == code, ct);
         if (exists) return BadRequest("Code already exists for this event.");
@@ -166,10 +162,46 @@ public class AdminDiscountsController : ControllerBase
 
         _db.Discounts.Add(d);
         await _db.SaveChangesAsync(ct);
+      
+        var ev = await _db.Events.AsNoTracking()
+            .Where(x => x.Id == eventId)
+            .Select(x => new { x.Title, x.StartTime, x.EndTime })
+            .SingleAsync(ct);
+
+        string discountText = d.Type == Enums.DiscountType.Percentage
+            ? $"{d.Value}% off"
+            : $"{(d.Value / 100.0):0.00} {d.TicketType?.Currency ?? "LKR"} off";
+
+        string period = (d.StartsAt, d.EndsAt) switch
+        {
+            (not null, not null) => $"{d.StartsAt:yyyy-MM-dd} → {d.EndsAt:yyyy-MM-dd}",
+            (not null, null)     => $"from {d.StartsAt:yyyy-MM-dd}",
+            (null, not null)     => $"until {d.EndsAt:yyyy-MM-dd}",
+            _                    => "limited time"
+        };
+
+        string subject = $"New discount for {ev.Title}: {discountText}";
+        string html = $@"
+            <div style='font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial'>
+              <h2>{ev.Title}</h2>
+              <p>We just launched a new discount: <strong>{discountText}</strong>.</p>
+              <p>Promo code: <strong style='font-family:monospace'>{d.Code}</strong></p>
+              <p>Valid period: <em>{period}</em></p>
+              <p>Event dates: {ev.StartTime:yyyy-MM-dd HH:mm} – {ev.EndTime:yyyy-MM-dd HH:mm}</p>
+              <p>Hurry while it lasts!</p>
+            </div>";
+       
+        var recipients = await _db.Users
+            .AsNoTracking()
+            .Where(u => !string.IsNullOrEmpty(u.Email))
+            .Select(u => u.Email!)
+            .ToListAsync(ct);
+
+        foreach (var email in recipients)
+            _emailQueue.Enqueue(new EmailJob(email, subject, html));
+
         return Ok(d);
     }
-
-    
 
     [HttpDelete("{eventId:long}/discounts/{id:long}")]
     public async Task<IActionResult> Delete(long eventId, long id, CancellationToken ct)

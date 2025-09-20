@@ -12,6 +12,7 @@ using EventTicketing.Services.Pricing;
 using EventTicketing.Services.Tickets;
 using JWTAuth.Services;
 using EventTicketing.Models.Options;
+using EventTicketing.Services.Email;
 using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -61,7 +62,10 @@ builder.Services.Configure<StripeOptions>(builder.Configuration.GetSection("Stri
 builder.Services.Configure<FrontendOptions>(builder.Configuration.GetSection("Frontend"));
 builder.Services.AddScoped<IPaymentGateway, StripeGateway>();
 
-// Pick one gateway implementation to start
+builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
+builder.Services.AddSingleton<IEmailQueue, EmailQueue>();
+builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
+builder.Services.AddHostedService<EmailWorker>();
 //builder.Services.AddScoped<IPaymentGateway, FakeGateway>();
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
