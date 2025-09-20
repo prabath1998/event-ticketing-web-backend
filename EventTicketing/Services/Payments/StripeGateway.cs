@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Configuration;
 using Stripe;
 using Stripe.Checkout;
+using Discount = EventTicketing.Entities.Discount;
 using StripeEvent = Stripe.Event;
 
 namespace EventTicketing.Services.Payments
@@ -50,20 +52,65 @@ namespace EventTicketing.Services.Payments
                 throw new InvalidOperationException("Order currency is required.");
 
             var currency = order.Currency.Trim().ToLowerInvariant();
+           
+            long SubtotalMinor = 0;
 
-            // Use the FINAL total (subtotal - discount + fees), in minor units
-            long total = order.TotalCents;
+            foreach (var i in order.Items)
+            {
+                var unitMinor = ToMinorUnits(i.UnitPriceCents, currency);
+                SubtotalMinor += unitMinor * i.Quantity;
+            }
+            
+            long DiscountMinor = 0;
+            string? normalizedCode = string.IsNullOrWhiteSpace(order.DiscountCode)
+                ? null
+                : order.DiscountCode.Trim().ToUpperInvariant();
 
-            // Optional: enforce Stripe minimum on the final total
+            if (!string.IsNullOrWhiteSpace(normalizedCode))
+            {
+                var eventId = await _db.OrderItems
+                    .Where(oi => oi.OrderId == order.Id)
+                    .Select(oi => oi.TicketType.EventId)
+                    .Distinct()
+                    .SingleAsync(ct);
+
+                var d = await _db.Discounts
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.EventId == eventId && x.Code == normalizedCode && x.IsActive
+                                              && (x.StartsAt == null || x.StartsAt <= DateTime.UtcNow)
+                                              && (x.EndsAt == null || x.EndsAt >= DateTime.UtcNow)
+                                              && (x.MaxUses == null || x.UsedCount < x.MaxUses), ct);
+
+                if (d is not null)
+                {
+                    DiscountMinor = ComputeDiscountMinor(d, order, currency);
+                    if (DiscountMinor > SubtotalMinor) DiscountMinor = SubtotalMinor;
+                }
+            }
+
+           
+            long FeesMinor = (long)Math.Round(SubtotalMinor * 0.025, MidpointRounding.AwayFromZero) + 50;
+
+           
+            long TotalMinor = SubtotalMinor - DiscountMinor + FeesMinor;
+
+          
             int minMinor = currency switch
             {
-                "lkr" => 20000, // Rs 200.00 in cents
-                "usd" => 50, // $0.50
+                "lkr" => 20000, 
+                "usd" => 50,
                 "eur" => 50,
                 _ => 50
             };
-            if (total < minMinor) total = minMinor;
 
+            if (TotalMinor < minMinor)
+            {
+                
+                FeesMinor += (minMinor - TotalMinor);
+                TotalMinor = minMinor;
+            }
+
+           
             var lineItems = new List<SessionLineItemOptions>
             {
                 new()
@@ -72,10 +119,10 @@ namespace EventTicketing.Services.Payments
                     PriceData = new SessionLineItemPriceDataOptions
                     {
                         Currency = currency,
-                        UnitAmount = (long)total, // Charge exactly the final total
+                        UnitAmount = TotalMinor,
                         ProductData = new SessionLineItemPriceDataProductDataOptions
                         {
-                            Name = $"Order #{order.OrderNumber}"
+                            Name = $"Order #{order.Id}"
                         }
                     }
                 }
@@ -86,12 +133,21 @@ namespace EventTicketing.Services.Payments
                 Mode = "payment",
                 LineItems = lineItems,
                 SuccessUrl = $"{_frontendOrigin}/payment/success",
-                CancelUrl = $"{_frontendOrigin}/checkout/cancel?orderId={order.Id}",
+                CancelUrl = $"{_frontendOrigin}/payment/cancel",
                 ClientReferenceId = order.Id.ToString(),
                 PaymentMethodTypes = new List<string> { "card" },
                 PaymentIntentData = new SessionPaymentIntentDataOptions
                 {
-                    Metadata = new Dictionary<string, string> { ["orderId"] = order.Id.ToString() }
+                    Metadata = new Dictionary<string, string>
+                    {
+                        ["orderId"] = order.Id.ToString(),
+                        ["subtotal_minor"] = SubtotalMinor.ToString(CultureInfo.InvariantCulture),
+                        ["discount_minor"] = DiscountMinor.ToString(CultureInfo.InvariantCulture),
+                        ["fees_minor"] = FeesMinor.ToString(CultureInfo.InvariantCulture),
+                        ["total_minor"] = TotalMinor.ToString(CultureInfo.InvariantCulture),
+                        ["currency"] = currency.ToUpperInvariant(),
+                        ["discount_code"] = normalizedCode ?? ""
+                    }
                 }
             };
 
@@ -106,14 +162,19 @@ namespace EventTicketing.Services.Payments
                 throw new InvalidOperationException($"Stripe Checkout error: {ex.Message}");
             }
             
+            order.SubtotalCents = (int)SubtotalMinor;
+            order.DiscountCents = (int)DiscountMinor;
+            order.FeesCents = (int)FeesMinor;
+            order.TotalCents = (int)TotalMinor;
+
             if (order.Payment == null)
             {
                 order.Payment = new Payment
                 {
                     OrderId = order.Id,
                     Provider = PaymentProvider.Stripe,
-                    Status = PaymentStatus.Succeeded,
-                    AmountCents = (int)total,
+                    Status = PaymentStatus.Initiated,
+                    AmountCents = (int)TotalMinor,
                     Currency = currency.ToUpperInvariant(),
                     ProviderSessionId = session.Id,
                     ProviderRef = session.Id,
@@ -125,8 +186,8 @@ namespace EventTicketing.Services.Payments
             else
             {
                 order.Payment.Provider = PaymentProvider.Stripe;
-                order.Payment.Status = PaymentStatus.Succeeded; 
-                order.Payment.AmountCents = (int)total;
+                order.Payment.Status = PaymentStatus.Initiated; 
+                order.Payment.AmountCents = (int)TotalMinor;
                 order.Payment.Currency = currency.ToUpperInvariant();
                 order.Payment.ProviderSessionId = session.Id;
                 order.Payment.ProviderRef = session.Id;
@@ -232,6 +293,47 @@ namespace EventTicketing.Services.Payments
 
             await _db.SaveChangesAsync(ct);
             return (order.Id, true);
+        }
+
+        private static long ToMinorUnits(long major, string currency)
+        {
+            return currency.Equals("jpy", StringComparison.OrdinalIgnoreCase) ? major : major * 100;
+        }
+
+        private static long ComputeDiscountMinor(Discount d, Order order, string currency)
+        {
+            long baseMinor;
+
+            if (d.Scope == DiscountScope.TicketType && d.TicketTypeId.HasValue)
+            {
+                baseMinor = 0;
+                foreach (var i in order.Items.Where(x => x.TicketTypeId == d.TicketTypeId.Value))
+                {
+                    var unitMinor = ToMinorUnits(i.UnitPriceCents, currency);
+                    baseMinor += unitMinor * i.Quantity;
+                }
+            }
+            else
+            {
+                
+                long subtotalMinor = 0;
+                foreach (var i in order.Items)
+                {
+                    var unitMinor = ToMinorUnits(i.UnitPriceCents, currency);
+                    subtotalMinor += unitMinor * i.Quantity;
+                }
+
+                baseMinor = subtotalMinor;
+            }
+
+            if (baseMinor <= 0) return 0;
+
+            return d.Type switch
+            {
+                DiscountType.Percentage => (long)Math.Floor(baseMinor * (d.Value / 100.0)),
+                DiscountType.Amount => ToMinorUnits(d.Value, currency), 
+                _ => 0
+            };
         }
     }
 }
