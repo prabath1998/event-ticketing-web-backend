@@ -51,61 +51,44 @@ namespace EventTicketing.Services.Payments
 
             var currency = order.Currency.Trim().ToLowerInvariant();
 
-            var lineItems = order.Items.Select(i =>
-            {
-                if (i.UnitPriceCents <= 0) throw new InvalidOperationException("Line item unit price must be > 0.");
-                return new SessionLineItemOptions
-                {
-                    Quantity = i.Quantity,
-                    PriceData = new SessionLineItemPriceDataOptions
-                    {
-                        Currency = currency,
-                        UnitAmount = i.UnitPriceCents,
-                        ProductData = new SessionLineItemPriceDataProductDataOptions
-                        {
-                            Name = i.TicketType?.Name ?? "Ticket"
-                        }
-                    }
-                };
-            }).ToList();
+            // Use the FINAL total (subtotal - discount + fees), in minor units
+            long total = order.TotalCents;
 
-            long subtotal = order.Items.Sum(i => (long)i.Quantity * i.UnitPriceCents);
-
+            // Optional: enforce Stripe minimum on the final total
             int minMinor = currency switch
             {
-                "lkr" => 20000,
-                "usd" => 50,
+                "lkr" => 20000, // Rs 200.00 in cents
+                "usd" => 50, // $0.50
                 "eur" => 50,
                 _ => 50
             };
+            if (total < minMinor) total = minMinor;
 
-            long adjustedTotal = subtotal;
-            if (subtotal < minMinor)
+            var lineItems = new List<SessionLineItemOptions>
             {
-                long fee = minMinor - subtotal;
-                lineItems.Add(new SessionLineItemOptions
+                new()
                 {
                     Quantity = 1,
                     PriceData = new SessionLineItemPriceDataOptions
                     {
                         Currency = currency,
-                        UnitAmount = fee,
+                        UnitAmount = (long)total, // Charge exactly the final total
                         ProductData = new SessionLineItemPriceDataProductDataOptions
-                            { Name = "Processing fee (min charge)" }
+                        {
+                            Name = $"Order #{order.OrderNumber}"
+                        }
                     }
-                });
-                adjustedTotal = minMinor;
-            }
+                }
+            };
 
             var options = new SessionCreateOptions
             {
                 Mode = "payment",
                 LineItems = lineItems,
-                SuccessUrl = $"{_frontendOrigin}/checkout/success?orderId={order.Id}",
+                SuccessUrl = $"{_frontendOrigin}/payment/success",
                 CancelUrl = $"{_frontendOrigin}/checkout/cancel?orderId={order.Id}",
                 ClientReferenceId = order.Id.ToString(),
                 PaymentMethodTypes = new List<string> { "card" },
-
                 PaymentIntentData = new SessionPaymentIntentDataOptions
                 {
                     Metadata = new Dictionary<string, string> { ["orderId"] = order.Id.ToString() }
@@ -122,49 +105,33 @@ namespace EventTicketing.Services.Payments
             {
                 throw new InvalidOperationException($"Stripe Checkout error: {ex.Message}");
             }
-
+            
             if (order.Payment == null)
             {
                 order.Payment = new Payment
                 {
                     OrderId = order.Id,
                     Provider = PaymentProvider.Stripe,
-                    Status = PaymentStatus.Initiated,
-                    AmountCents = (int)adjustedTotal,
+                    Status = PaymentStatus.Succeeded,
+                    AmountCents = (int)total,
                     Currency = currency.ToUpperInvariant(),
                     ProviderSessionId = session.Id,
-                    ProviderRef = session.Id
+                    ProviderRef = session.Id,
+                    PaidAt = null,
+                    RawResponse = null
                 };
                 _db.Payments.Add(order.Payment);
             }
             else
             {
                 order.Payment.Provider = PaymentProvider.Stripe;
-                order.Payment.Status = PaymentStatus.Succeeded;
-                order.Payment.AmountCents = (int)adjustedTotal;
+                order.Payment.Status = PaymentStatus.Succeeded; 
+                order.Payment.AmountCents = (int)total;
                 order.Payment.Currency = currency.ToUpperInvariant();
                 order.Payment.ProviderSessionId = session.Id;
                 order.Payment.ProviderRef = session.Id;
                 order.Payment.PaidAt = null;
                 order.Payment.RawResponse = null;
-            }
-            
-            if (!string.IsNullOrWhiteSpace(order.DiscountCode))
-            {
-                var eventId = await _db.OrderItems
-                    .Where(oi => oi.OrderId == order.Id)
-                    .Select(oi => oi.TicketType.EventId)
-                    .Distinct().SingleAsync(ct);
-
-                var code = order.DiscountCode.Trim().ToUpperInvariant();
-
-                var d = await _db.Discounts
-                    .FirstOrDefaultAsync(x => x.EventId == eventId && x.Code == code, ct);
-
-                if (d != null && (d.MaxUses == null || d.UsedCount < d.MaxUses.Value))
-                {
-                    d.UsedCount += 1;
-                }
             }
 
             await _db.SaveChangesAsync(ct);
@@ -177,6 +144,7 @@ namespace EventTicketing.Services.Payments
                 RequiresRedirect: true
             );
         }
+
 
         public async Task<(long orderId, bool success)> HandleWebhookAsync(
             string payload, string? signature, CancellationToken ct = default)
