@@ -12,9 +12,10 @@ public class PublicEventsController : ControllerBase
 {
     private readonly AppDbContext _db;
     public PublicEventsController(AppDbContext db) => _db = db;
-   
+
     [HttpGet]
-    [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "q","categoryId","city","from","to","includePast","page","pageSize" })]
+    [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any,
+        VaryByQueryKeys = new[] { "q", "categoryId", "city", "from", "to", "includePast", "page", "pageSize" })]
     public async Task<IActionResult> List(
         [FromQuery] string? q,
         [FromQuery] int? categoryId,
@@ -52,7 +53,7 @@ public class PublicEventsController : ControllerBase
             query = query.Where(e => e.LocationCity == city);
 
         if (from is not null) query = query.Where(e => e.StartTime >= from.Value);
-        if (to   is not null) query = query.Where(e => e.StartTime <  to.Value);
+        if (to is not null) query = query.Where(e => e.StartTime < to.Value);
 
         query = query.OrderBy(e => e.StartTime).ThenBy(e => e.Id);
 
@@ -81,7 +82,7 @@ public class PublicEventsController : ControllerBase
             items
         });
     }
-   
+
     [HttpGet("{id:long}")]
     [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "id" })]
     public async Task<IActionResult> Get(long id, CancellationToken ct)
@@ -105,10 +106,11 @@ public class PublicEventsController : ControllerBase
 
         return e is null ? NotFound() : Ok(e);
     }
-  
+
     [HttpGet("{id:long}/ticket-types")]
-    [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "id","includeAll" })]
-    public async Task<IActionResult> TicketTypes(long id, [FromQuery] bool includeAll = false, CancellationToken ct = default)
+    [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "id", "includeAll" })]
+    public async Task<IActionResult> TicketTypes(long id, [FromQuery] bool includeAll = false,
+        CancellationToken ct = default)
     {
         var now = DateTime.UtcNow;
 
@@ -131,5 +133,25 @@ public class PublicEventsController : ControllerBase
             .ToListAsync(ct);
 
         return Ok(result);
+    }
+
+    [HttpGet("{eventId:long}/discounts")]
+    public async Task<IActionResult> ListPublicDiscounts(long eventId, CancellationToken ct)
+    {
+        var now = DateTime.UtcNow;
+        var promos = await _db.Discounts.AsNoTracking()
+            .Where(d => d.EventId == eventId && d.IsActive
+                                             && (d.StartsAt == null || d.StartsAt <= now)
+                                             && (d.EndsAt == null || d.EndsAt >= now)
+                                             && (d.MaxUses == null || d.UsedCount < d.MaxUses))
+            .Select(d => new
+            {
+                type = d.Type.ToString(), value = d.Value,
+                scope = d.Scope.ToString(),
+                endsAt = d.EndsAt
+            })
+            .ToListAsync(ct);
+
+        return Ok(promos); 
     }
 }

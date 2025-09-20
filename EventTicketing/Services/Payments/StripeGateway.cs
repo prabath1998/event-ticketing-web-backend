@@ -140,13 +140,31 @@ namespace EventTicketing.Services.Payments
             else
             {
                 order.Payment.Provider = PaymentProvider.Stripe;
-                order.Payment.Status = PaymentStatus.Initiated;
+                order.Payment.Status = PaymentStatus.Succeeded;
                 order.Payment.AmountCents = (int)adjustedTotal;
                 order.Payment.Currency = currency.ToUpperInvariant();
                 order.Payment.ProviderSessionId = session.Id;
                 order.Payment.ProviderRef = session.Id;
                 order.Payment.PaidAt = null;
                 order.Payment.RawResponse = null;
+            }
+            
+            if (!string.IsNullOrWhiteSpace(order.DiscountCode))
+            {
+                var eventId = await _db.OrderItems
+                    .Where(oi => oi.OrderId == order.Id)
+                    .Select(oi => oi.TicketType.EventId)
+                    .Distinct().SingleAsync(ct);
+
+                var code = order.DiscountCode.Trim().ToUpperInvariant();
+
+                var d = await _db.Discounts
+                    .FirstOrDefaultAsync(x => x.EventId == eventId && x.Code == code, ct);
+
+                if (d != null && (d.MaxUses == null || d.UsedCount < d.MaxUses.Value))
+                {
+                    d.UsedCount += 1;
+                }
             }
 
             await _db.SaveChangesAsync(ct);

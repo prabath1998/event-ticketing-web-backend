@@ -21,24 +21,23 @@ public record OrderSummaryDto(
     DateTime CreatedAt
 );
 
-/*public record PaymentInitResponseDto(
-    string Provider,
-    string? ClientSecret,
-    string? RedirectUrl
-);*/
+public record ApplyDiscountDto(string Code);
 
-//public record PaymentInitResponseDto(string Provider, long OrderId, bool RequiresRedirect);
-// Models/OrdersPaymentsDtos.cs
-//public record PaymentInitResponseDto(string Provider, long OrderId, bool RequiresRedirect);
-
-
-public record PaymentWebhookDto( 
+public record PaymentWebhookDto(
     string Provider,
     string Payload,
     string? Signature
 );
 
-// Models/OrdersPaymentsDtos.cs (or similar)
+public record OrderTotalsDto(
+    int SubtotalCents,
+    int DiscountCents,
+    int FeesCents,
+    int TotalCents,
+    string Currency
+);
+
+
 public record PaymentInitResponseDto(
     string provider,
     string? clientSecret,

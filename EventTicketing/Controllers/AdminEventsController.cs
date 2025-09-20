@@ -75,4 +75,5 @@ public class AdminEventsController : ControllerBase
         await _audit.LogAsync(adminId, "EventStatusChanged", "Event", id, new { newStatus }, ct);
         return Ok(new { ev.Id, ev.Status });
     }
+    
 }

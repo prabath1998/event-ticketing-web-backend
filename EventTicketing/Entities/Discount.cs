@@ -8,14 +8,14 @@ namespace EventTicketing.Entities
         public long Id { get; set; }
 
         [Required, MaxLength(50)]
-        public string Code { get; set; } = default!;
+        public string Code { get; set; } = default!;   
 
-        public DiscountType Type { get; set; }
-        public int Value { get; set; }
+        public DiscountType Type { get; set; }        
+        public int Value { get; set; }             
 
         public DiscountScope Scope { get; set; } = DiscountScope.Order;
-
-        public long? TicketTypeId { get; set; }
+        public long EventId { get; set; }            
+        public long? TicketTypeId { get; set; }       
 
         public DateTime? StartsAt { get; set; }
         public DateTime? EndsAt { get; set; }
@@ -27,5 +27,7 @@ namespace EventTicketing.Entities
         public bool IsActive { get; set; } = true;
 
         public TicketType? TicketType { get; set; }
+        public Event Event { get; set; } = default!;
     }
+
 }

@@ -130,6 +130,20 @@ namespace EventTicketing.Data
                     .HasForeignKey(d => d.TicketTypeId).OnDelete(DeleteBehavior.Restrict);
             });
             
+            modelBuilder.Entity<Discount>()
+                .HasIndex(d => new { d.EventId, d.Code })
+                .IsUnique();
+
+            modelBuilder.Entity<Discount>()
+                .Property(d => d.Code)
+                .HasMaxLength(50);
+
+            modelBuilder.Entity<Discount>()
+                .HasOne(d => d.Event)
+                .WithMany()                
+                .HasForeignKey(d => d.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
             modelBuilder.Entity<LoyaltyLedger>(e =>
             {
                 e.HasIndex(x => new { x.UserId, x.CreatedAt });
@@ -152,14 +166,8 @@ namespace EventTicketing.Data
                 new Role { Id = 3, Name = "Customer" }
             );
             
-            /*modelBuilder.Entity<TicketType>(b =>
-            {
-                b.Property(x => x.SalesStart)
-                    .HasColumnType("datetime(6)");
-
-                b.Property(x => x.SalesEnd)
-                    .HasColumnType("datetime(6)");
-            });*/
+            
+          
         }
         
         public override int SaveChanges()
