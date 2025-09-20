@@ -20,7 +20,6 @@ namespace EventTicketing.Services.Tickets
 
         public async Task IssueForPaidOrderAsync(long orderId, CancellationToken ct = default)
         {
-            // Load order with items
             var order = await _db.Orders
                 .Include(o => o.Items)
                 .FirstOrDefaultAsync(o => o.Id == orderId, ct);
@@ -30,8 +29,7 @@ namespace EventTicketing.Services.Tickets
 
             if (order.Status != OrderStatus.Pending)
                 throw new InvalidOperationException($"Order {orderId} not paid. Current status: {order.Status}");
-
-            // Idempotency: if any ticket already exists for this order, do nothing
+           
             var alreadyHasTickets = await _db.Tickets
                 .AnyAsync(t => order.Items.Select(i => i.Id).Contains(t.OrderItemId), ct);
             if (alreadyHasTickets) return;
@@ -40,11 +38,10 @@ namespace EventTicketing.Services.Tickets
 
             foreach (var item in order.Items)
             {
-                // Defensive: quantity sanity
                 var qty = Math.Max(0, item.Quantity);
                 for (var i = 0; i < qty; i++)
                 {
-                    var code = GenerateTicketCode(); // short unique-ish code
+                    var code = GenerateTicketCode(); 
                     var payload = BuildSignedQrPayload(order.Id, item.Id, code);
 
                     var ticket = new Ticket
@@ -65,17 +62,14 @@ namespace EventTicketing.Services.Tickets
 
         private string GenerateTicketCode(int bytes = 6)
         {
-            // 6 bytes -> 8-char base32/hex-like; tweak for your format.
             Span<byte> b = stackalloc byte[bytes];
             RandomNumberGenerator.Fill(b);
-            // URL-safe base64 without padding
             var s = Convert.ToBase64String(b).Replace('+', '-').Replace('/', '_').TrimEnd('=');
             return $"TKT-{s}";
         }
 
         private string BuildSignedQrPayload(long orderId, long orderItemId, string ticketCode)
         {
-            // data format (stable & simple): "<orderId>:<orderItemId>:<ticketCode>|<base64sig>"
             var data = $"{orderId}:{orderItemId}:{ticketCode}";
             var sig  = Sign(data);
             return $"{data}|{sig}";

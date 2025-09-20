@@ -47,6 +47,17 @@ namespace EventTicketing.Controllers
             if (role == null) return BadRequest($"Role '{roleName}' not found.");
             _db.UserRoles.Add(new UserRole { UserId = user.Id, RoleId = role.Id });
             await _db.SaveChangesAsync(ct);
+            
+            if (roleName == "Organizer")
+            {
+                var profile = new OrganizerProfile
+                {
+                    UserId = user.Id,
+                    CompanyName = "Organizer " + user.Id    
+                };
+                _db.OrganizerProfiles.Add(profile);
+                await _db.SaveChangesAsync(ct);
+            }
 
             var roles = await _db.UserRoles.Where(ur => ur.UserId == user.Id)
                                            .Join(_db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)

@@ -184,7 +184,7 @@ public class AdminDiscountsController : ControllerBase
 
         string html = DiscountEmailTemplate.BuildHtml(
             orgName: "Star Events",
-            logoUrl: "https://your-cdn.example/logo-dark.png",
+            logoUrl: "",
             eventTitle: ev.Title,
             startUtc: ev.StartTime,
             endUtc: ev.EndTime,
@@ -192,7 +192,7 @@ public class AdminDiscountsController : ControllerBase
             discountLabel: discountLabel,
             promoCode: d.Code,
             validityText: window,
-            ctaUrl: $"https://app.local/events/{eventId}", 
+            ctaUrl: $"http://localhost:3000/events/{eventId}", 
             heroUrl: ev.HeroImageUrl,
             supportEmail: "support@starevents.local",
             unsubscribeUrl: "https://app.local/account/notifications"

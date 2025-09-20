@@ -161,7 +161,6 @@ public class PaymentsController : ControllerBase
 
         if (order == null) return NotFound();
 
-
         try
         {
             await _tickets.IssueForPaidOrderAsync(order.Id, ct);
