@@ -18,11 +18,13 @@ public class AdminDiscountsController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IAuditService _audit;
-    private readonly IEmailQueue _emailQueue;  
+    private readonly IEmailQueue _emailQueue;
 
     public AdminDiscountsController(AppDbContext db, IAuditService audit, IEmailQueue emailQueue)
     {
-        _db = db; _audit = audit; _emailQueue = emailQueue;
+        _db = db;
+        _audit = audit;
+        _emailQueue = emailQueue;
     }
 
     private bool TryGetUserId(out long userId)
@@ -30,7 +32,7 @@ public class AdminDiscountsController : ControllerBase
         var raw = User.FindFirstValue("sub") ?? User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
         return long.TryParse(raw, out userId);
     }
-    
+
     [HttpPut("{eventId:long}/discounts/{id:long}")]
     public async Task<IActionResult> Update(long eventId, long id, [FromBody] CreateDiscountDto dto,
         CancellationToken ct)
@@ -63,7 +65,7 @@ public class AdminDiscountsController : ControllerBase
     {
         page = Math.Max(page, 1);
         pageSize = Math.Clamp(pageSize, 1, 100);
-        
+
         IQueryable<Discount> d = _db.Discounts
             .AsNoTracking()
             .Where(x => x.EventId == eventId);
@@ -113,7 +115,7 @@ public class AdminDiscountsController : ControllerBase
         await _audit.LogAsync(adminId, "DiscountToggled", "Discount", id, new { dto.IsActive }, ct);
         return Ok(new { disc.Id, disc.IsActive });
     }
-    
+
 
     public record CreateDiscountDto(
         string Code,
@@ -162,35 +164,42 @@ public class AdminDiscountsController : ControllerBase
 
         _db.Discounts.Add(d);
         await _db.SaveChangesAsync(ct);
-      
+        
         var ev = await _db.Events.AsNoTracking()
             .Where(x => x.Id == eventId)
-            .Select(x => new { x.Title, x.StartTime, x.EndTime })
+            .Select(x => new { x.Title, x.StartTime, x.EndTime, x.LocationCity, x.HeroImageUrl })
             .SingleAsync(ct);
 
-        string discountText = d.Type == Enums.DiscountType.Percentage
-            ? $"{d.Value}% off"
-            : $"{(d.Value / 100.0):0.00} {d.TicketType?.Currency ?? "LKR"} off";
+        string discountLabel = d.Type == Enums.DiscountType.Percentage
+            ? $"{d.Value}% OFF"
+            : $"{(d.Value):0.##} {"LKR"} OFF"; 
 
-        string period = (d.StartsAt, d.EndsAt) switch
+        string window = (d.StartsAt, d.EndsAt) switch
         {
-            (not null, not null) => $"{d.StartsAt:yyyy-MM-dd} → {d.EndsAt:yyyy-MM-dd}",
-            (not null, null)     => $"from {d.StartsAt:yyyy-MM-dd}",
-            (null, not null)     => $"until {d.EndsAt:yyyy-MM-dd}",
-            _                    => "limited time"
+            (not null, not null) => $"Valid {d.StartsAt:MMM d} → {d.EndsAt:MMM d}",
+            (not null, null) => $"Valid from {d.StartsAt:MMM d}",
+            (null, not null) => $"Valid until {d.EndsAt:MMM d}",
+            _ => "Limited time offer"
         };
 
-        string subject = $"New discount for {ev.Title}: {discountText}";
-        string html = $@"
-            <div style='font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial'>
-              <h2>{ev.Title}</h2>
-              <p>We just launched a new discount: <strong>{discountText}</strong>.</p>
-              <p>Promo code: <strong style='font-family:monospace'>{d.Code}</strong></p>
-              <p>Valid period: <em>{period}</em></p>
-              <p>Event dates: {ev.StartTime:yyyy-MM-dd HH:mm} – {ev.EndTime:yyyy-MM-dd HH:mm}</p>
-              <p>Hurry while it lasts!</p>
-            </div>";
-       
+        string html = DiscountEmailTemplate.BuildHtml(
+            orgName: "Star Events",
+            logoUrl: "https://your-cdn.example/logo-dark.png",
+            eventTitle: ev.Title,
+            startUtc: ev.StartTime,
+            endUtc: ev.EndTime,
+            city: ev.LocationCity,
+            discountLabel: discountLabel,
+            promoCode: d.Code,
+            validityText: window,
+            ctaUrl: $"https://app.local/events/{eventId}", 
+            heroUrl: ev.HeroImageUrl,
+            supportEmail: "support@starevents.local",
+            unsubscribeUrl: "https://app.local/account/notifications"
+        );
+
+        string subject = $"New discount for {ev.Title} — {discountLabel}";
+
         var recipients = await _db.Users
             .AsNoTracking()
             .Where(u => !string.IsNullOrEmpty(u.Email))
@@ -199,6 +208,7 @@ public class AdminDiscountsController : ControllerBase
 
         foreach (var email in recipients)
             _emailQueue.Enqueue(new EmailJob(email, subject, html));
+
 
         return Ok(d);
     }
