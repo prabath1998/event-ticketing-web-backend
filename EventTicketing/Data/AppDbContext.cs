@@ -166,7 +166,15 @@ namespace EventTicketing.Data
                 new Role { Id = 3, Name = "Customer" }
             );
             
-            
+            modelBuilder.Entity<Category>().HasIndex(x => x.Slug).IsUnique();
+
+            modelBuilder.Entity<Category>().HasData(
+                new Category { Id = 1, Name = "Music",    Slug = "music" },
+                new Category { Id = 2, Name = "Drama",    Slug = "drama" },
+                new Category { Id = 3, Name = "Sport",    Slug = "sport" },
+                new Category { Id = 4, Name = "Festival", Slug = "festival" },
+                new Category { Id = 5, Name = "Other",    Slug = "other" }
+            );
           
         }
         

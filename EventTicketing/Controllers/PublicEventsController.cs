@@ -152,6 +152,18 @@ public class PublicEventsController : ControllerBase
             })
             .ToListAsync(ct);
 
-        return Ok(promos); 
+        return Ok(promos);
+    }
+
+    [HttpGet("categories/all")]
+    public async Task<IActionResult> List(CancellationToken ct)
+    {
+        var items = await _db.Categories
+            .AsNoTracking()
+            .OrderBy(c => c.Name)
+            .Select(c => new { c.Id, c.Name, c.Slug })
+            .ToListAsync(ct);
+
+        return Ok(items);
     }
 }
