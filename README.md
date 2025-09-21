@@ -121,7 +121,22 @@ cd event-ticketing-system
     "Password": "",
     "From": "noreply@eventhub.test"
   },
-  "FrontendOrigin": "http://localhost:3000"
+  "FrontendOrigin": "http://localhost:3000",
+  "Jwt": {
+    "Issuer": "https://api.starevents.local",
+    "Audience": "StarEventsWeb",
+    "Key": "MySuperSecureAndRandomKeyThatLooksJustAwesomeAndNeedsToBeVeryVeryLong!!!",
+    "AccessTokenMinutes": 30,
+    "RefreshTokenDays": 7
+  },
+  "Tickets": { "QrSecret": "super_secret_change_me" },
+  "Payments": {
+    "UseDummy": true,
+    "AllowDummyConfirm": true
+  },
+  "Ticketing": {
+    "QrHmacSecret": "please-change-this-in-prod"
+  },
 }
 ```
 
