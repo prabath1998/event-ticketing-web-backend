@@ -67,7 +67,7 @@ It allows **organizers** to create and manage events, ticket types, discounts, a
 ## 🛠️ Tech Stack
 
 ### Backend
-- **ASP.NET Core 7 (C#)**
+- **ASP.NET Core 9 (C#)**
 - **Entity Framework Core** (MySQL / MariaDB)
 - **Stripe .NET SDK**
 - **Background Queues** for async email sending
