@@ -2,17 +2,16 @@ using EventTicketing.Enums;
 
 namespace EventTicketing.Models;
 
-public class UserReportDto
-{
-    public long Id { get; set; }
-    public string Email { get; set; } = string.Empty;
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
-    public int TotalTicketsPurchased { get; set; }
-    public decimal TotalAmountSpent { get; set; }
-    public string Currency { get; set; } = "USD";
-}
+//public class UserReportDto
+//{
+//    public long Id { get; set; }
+//    public string Email { get; set; } = string.Empty;
+//    public string FirstName { get; set; } = string.Empty;
+//    public string LastName { get; set; } = string.Empty;
+//    public DateTime CreatedAt { get; set; }
+//    public int TotalTicketsPurchased { get; set; }
+//    public decimal TotalAmountSpent { get; set; }
+//}
 
 public class EventReportDto
 {
@@ -32,7 +31,7 @@ public class EventReportDto
 
 public class OrganizerReportRequestDto
 {
-    public string ReportType { get; set; } = string.Empty; // "users" or "events"
+    public string ReportType { get; set; } = string.Empty;
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public long? EventId { get; set; }
