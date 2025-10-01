@@ -107,8 +107,8 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPost("{orderId:long}/apply-discount")]
-    public async Task<ActionResult<OrderTotalsDto>> ApplyDiscount(long orderId, [FromBody] ApplyDiscountDto body,
-        CancellationToken ct)
+    public async Task<ActionResult<OrderTotalsDto>> ApplyDiscount(
+        long orderId, [FromBody] ApplyDiscountDto body, CancellationToken ct)
     {
         var order = await _db.Orders
             .Include(o => o.Items).ThenInclude(i => i.TicketType)
@@ -117,25 +117,67 @@ public class OrdersController : ControllerBase
         if (order == null) return NotFound();
         if (order.Status != OrderStatus.Pending) return BadRequest("Order not pending.");
 
+        var codeRaw = body.Code?.Trim();
+        if (string.IsNullOrWhiteSpace(codeRaw))
+            return BadRequest("Promo code is required.");
+        var code = codeRaw.ToUpperInvariant();
+      
+        var eventId = order.Items
+            .Select(i => i.TicketType.EventId)
+            .Distinct()
+            .SingleOrDefault();
+
+        if (eventId == 0)
+            return BadRequest("Order items are invalid for discount application.");
+
+        var now = DateTime.UtcNow;
+       
+        var discount = await _db.Discounts.AsNoTracking()
+            .FirstOrDefaultAsync(d =>
+                d.EventId == eventId &&
+                d.Code == code &&
+                d.IsActive &&
+                (d.StartsAt == null || d.StartsAt <= now) &&
+                (d.EndsAt == null || d.EndsAt >= now) &&
+                (d.MaxUses == null || d.UsedCount < d.MaxUses), ct);
+
+        if (discount == null)
+            return BadRequest("Invalid or expired promo code.");
+       
+        if (discount.Scope == DiscountScope.TicketType)
+        {
+            var containsTicketType = order.Items.Any(i => i.TicketTypeId == discount.TicketTypeId);
+            if (!containsTicketType)
+                return BadRequest("Promo code does not apply to selected ticket types.");
+        }
+        
+        var currentSubtotal = order.Items.Sum(i => i.Quantity * i.UnitPriceCents);
+        if (discount.MinSubtotalCents.HasValue && currentSubtotal < discount.MinSubtotalCents.Value)
+            return BadRequest("Promo code requires a higher subtotal.");
+       
         var items = order.Items
             .Select(i => new CartItemDto(i.TicketTypeId, i.Quantity))
             .ToList();
 
-        var result = await _pricing.ComputeAsync(items, body.Code, ct);
+        var result = await _pricing.ComputeAsync(items, code, ct);
+       
+        if (result.DiscountCents <= 0)
+            return BadRequest("Promo code is not applicable to this order.");
 
         order.SubtotalCents = result.SubtotalCents;
         order.DiscountCents = result.DiscountCents;
         order.FeesCents = result.FeesCents;
         order.TotalCents = result.SubtotalCents - result.DiscountCents + result.FeesCents;
         order.Currency = result.Currency;
-        order.DiscountCode = result.DiscountCents > 0 ? body.Code.Trim().ToUpperInvariant() : null;
+        order.DiscountCode = code;
         order.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(ct);
 
-        return new OrderTotalsDto(order.SubtotalCents, order.DiscountCents, order.FeesCents, order.TotalCents,
-            order.Currency);
+        return new OrderTotalsDto(
+            order.SubtotalCents, order.DiscountCents, order.FeesCents, order.TotalCents, order.Currency);
     }
+
 
     [HttpDelete("{orderId:long}/discount")]
     public async Task<ActionResult<OrderTotalsDto>> RemoveDiscount(long orderId, CancellationToken ct)
